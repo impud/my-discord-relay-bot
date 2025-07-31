@@ -1,18 +1,18 @@
-name: Run Discord to Telegram Bot
+name: Discord to Telegram Bot
 
 on:
-  push:
-  workflow_dispatch:
-  schedule:
-    - cron: '*/30 * * * *'  # запускается каждые 30 минут
+  workflow_dispatch:  # запуск только вручную
+
+concurrency:
+  group: bot-instance
+  cancel-in-progress: true  # если запускается новая версия — предыдущая отменяется
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -20,7 +20,7 @@ jobs:
         python-version: '3.10'
 
     - name: Install dependencies
-      run: pip install discord.py flask requests
+      run: pip install -r requirements.txt
 
     - name: Run bot
       env:
@@ -29,3 +29,4 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         ALLOWED_THREAD_ID: ${{ secrets.ALLOWED_THREAD_ID }}
       run: python main.py
+
