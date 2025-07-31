@@ -40,17 +40,21 @@ def send_file_to_telegram(file_url, filename):
     except Exception as e:
         print("❌ Ошибка при загрузке файла:", e)
 
-def send_photo_to_telegram(file_url):
+def send_photo_to_telegram(file_url, caption=""):
     try:
         file_content = requests.get(file_url).content
         files = {"photo": ("image.jpg", file_content)}
-        data = {"chat_id": TELEGRAM_CHAT_ID}
+        data = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "caption": caption
+        }
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
         r = requests.post(url, data=data, files=files)
         if not r.ok:
             print("❌ Ошибка при отправке фото:", r.text)
     except Exception as e:
         print("❌ Ошибка при загрузке фото:", e)
+
 
 # === ОБРАБОТКА СООБЩЕНИЙ ИЗ DISCORD ===
 @client.event
@@ -70,17 +74,19 @@ async def on_message(message):
 
     print(f"📥 Получено сообщение: {content} от {author}")
 
-    if content:
-        send_text_to_telegram(f"{author}: {content}")
+  if content:
+    send_text_to_telegram(f"{author}: {content}")
 
-    for attachment in message.attachments:
-        file_url = attachment.url
-        filename = attachment.filename.lower()
+for attachment in message.attachments:
+    file_url = attachment.url
+    filename = attachment.filename.lower()
 
-        if filename.endswith((".png", ".jpg", ".jpeg", ".gif")):
-            send_photo_to_telegram(file_url)
-        else:
-            send_file_to_telegram(file_url, filename)
+    if filename.endswith((".png", ".jpg", ".jpeg", ".gif")):
+        send_photo_to_telegram(file_url, caption=f"{author} отправил(а) изображение")
+    else:
+        send_text_to_telegram(f"{author} отправил(а) файл: {filename}")
+        send_file_to_telegram(file_url, filename)
+
 
 # === UPTIME-KEEPER ===
 app = Flask('')
